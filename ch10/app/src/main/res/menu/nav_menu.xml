@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@android:drawable/ic_dialog_email"
+        android:title="Home" />
+    <item
+        android:id="@+id/page1Fragment"
+        android:icon="@android:drawable/ic_dialog_info"
+        android:title="Page 1" />
+    <item
+        android:id="@+id/page2Fragment"
+        android:icon="@android:drawable/ic_lock_idle_charging"
+        android:title="Page 2" />
+    <item
+        android:id="@+id/myDialogFragment"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:title="Dialog" />
+</menu>
