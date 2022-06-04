@@ -81,9 +81,9 @@ class CheckHW():
 
 if __name__ == '__main__':
     # 테스트할 APK 파일의 위치
-    DEF_APP_LOCATION = r'C:\Users\jyheo\AndroidStudioProjects\Lab10\app\build\intermediates\apk\debug\app-debug.apk'
+    DEF_APP_LOCATION = r'C:\Users\aksid\OneDrive\Desktop\repository\ch14\app\build\outputs\apk\debug\app-debug.apk'
     # ADB.EXE 의 위치. 보통 Android SDK 밑에 platform-tools 밑에 있음, 맥이나 리눅스는 exe 확장자는 없음
-    ADB_LOCATION = r'C:\Users\jyheo\AppData\Local\Android\Sdk\platform-tools\adb.exe'
+    ADB_LOCATION = r'C:\Users\aksid\OneDrive\Desktop\repository\platform-tools\adb.exe'
     ANDROID_VERSION = '12.0'
     if len(sys.argv) >= 2:  # apk 파일을 명령줄 인자로 받을 수 있도록
         if sys.argv[1][-3:] == 'apk':
@@ -101,8 +101,8 @@ if __name__ == '__main__':
 
     chw = CheckHW(DEF_APP_LOCATION, ANDROID_VERSION)
 
-    media_image_list = ['IMG_20220525_212830', 'IMG_20220525_224834',
-                        'IMG_20220525_224835']  # 이미지 이름 목록, 3개만, 테스트하는 장치에 저장된 이미지 이름 3개까지만 테스트함
+    media_image_list = ['IMG_20220603_144639'
+                        , 'IMG_20220603_144728', 'IMG_20220603_145352']  # 이미지 이름 목록, 3개만, 테스트하는 장치에 저장된 이미지 이름 3개까지만 테스트함
     r = chw.test_lab10(ADB_LOCATION, media_image_list)  # 실습 검사할 때 초기값은 랜덤하게 정함
     if r == 'OK':
         score = 100
