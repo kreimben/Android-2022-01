@@ -3,7 +3,6 @@ package com.example.ch14
 import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -16,42 +15,37 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ch14.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 
-//https://developer.android.com/guide/topics/providers/content-provider-basics
-
 class MainActivity : AppCompatActivity() {
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     private val adapter by lazy { MyAdapter(viewModel) }
     private val broadcastReceiver = MyBroadcastReceiver()
     private val viewModel by viewModels<MyViewModel>()
-    private fun requestMultiplePermission(perms: Array<String>) {
-        val requestPerms =
-            perms.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
-        if (requestPerms.isEmpty())
+
+    private fun requestSinglePermission(permission: String) {
+        if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED)
             return
 
         val requestPermLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-                val noPerms = it.filter { item -> item.value == false }.keys
-                if (noPerms.isNotEmpty()) { // there is a permission which is not granted!
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+                if (it == false) { // permission is not granted!
                     AlertDialog.Builder(this).apply {
                         setTitle("Warning")
-                        setMessage(getString(R.string.no_permission, noPerms.toString()))
+                        setMessage(getString(R.string.no_permission, permission))
                     }.show()
                 }
             }
 
-        val showRationalePerms = requestPerms.filter { shouldShowRequestPermissionRationale(it) }
-        if (showRationalePerms.isNotEmpty()) {
+        if (shouldShowRequestPermissionRationale(permission)) {
             // you should explain the reason why this app needs the permission.
             AlertDialog.Builder(this).apply {
                 setTitle("Reason")
-                setMessage(getString(R.string.req_permission_reason, requestPerms))
-                setPositiveButton("Allow") { _, _ -> requestPermLauncher.launch(requestPerms.toTypedArray()) }
+                setMessage(getString(R.string.req_permission_reason, permission))
+                setPositiveButton("Allow") { _, _ -> requestPermLauncher.launch(permission) }
                 setNegativeButton("Deny") { _, _ -> }
             }.show()
         } else {
             // should be called in onCreate()
-            requestPermLauncher.launch(requestPerms.toTypedArray())
+            requestPermLauncher.launch(permission)
         }
     }
 
@@ -59,38 +53,40 @@ class MainActivity : AppCompatActivity() {
         checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED
 
     private fun readMedia() {
-        if (!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE))
-            return
+        println("readMedia!")
+        var count = 0
+        do {
+            println("+++++++++++++++++++++++++++")
+            println("count: ${++count}")
+            println("+++++++++++++++++++++++++++")
 
-        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        } else {
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        }
-
-        val projection =
-            arrayOf(MediaStore.Images.ImageColumns._ID, MediaStore.Images.ImageColumns.TITLE)
-        val cursor = contentResolver.query(collection, projection, null, null, null)
-        cursor?.apply {
-            val idCol = getColumnIndex(MediaStore.Images.ImageColumns._ID)
-            val titleCol = getColumnIndex(MediaStore.Images.ImageColumns.TITLE)
-
-            while (moveToNext()) {
-                val contentUri = ContentUris.withAppendedId(
-                    collection,
-                    getLong(idCol)
-                )
-                val title = getString(titleCol)
-                println("title: ${title}")
-                val bitmap = contentResolver.openInputStream(contentUri)?.use {
-                    BitmapFactory.decodeStream(it)
-                }
-                adapter.addItem(Item(bitmap , title))
-//                break // display the first image
+            val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+            } else {
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             }
-            close()
-        }
-        println("Image Count: ${adapter.getItemCount()}")
+
+            val projection =
+                arrayOf(MediaStore.Images.ImageColumns._ID, MediaStore.Images.ImageColumns.TITLE)
+            val cursor = contentResolver.query(collection, projection, null, null, null)
+            cursor?.apply {
+                val idCol = getColumnIndex(MediaStore.Images.ImageColumns._ID)
+                val titleCol = getColumnIndex(MediaStore.Images.ImageColumns.TITLE)
+
+                while (moveToNext()) {
+                    val contentUri = ContentUris.withAppendedId(
+                        collection,
+                        getLong(idCol)
+                    )
+                    val title = getString(titleCol)
+                    val bitmap = contentResolver.openInputStream(contentUri)?.use {
+                        BitmapFactory.decodeStream(it)
+                    }
+                    adapter.addItem(Item(bitmap, title))
+                }
+                close()
+            }
+        } while (!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE))
     }
 
     private fun startBroadcastReceiver() {
@@ -110,11 +106,13 @@ class MainActivity : AppCompatActivity() {
 
         startBroadcastReceiver()
 
-        requestMultiplePermission(
-            arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            )
-        )
+        requestSinglePermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+
+//        requestMultiplePermission(
+//            arrayOf(
+//                Manifest.permission.READ_EXTERNAL_STORAGE
+//            )
+//        )
         readMedia()
     }
 
